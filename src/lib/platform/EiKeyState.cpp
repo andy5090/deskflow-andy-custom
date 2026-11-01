@@ -95,6 +95,33 @@ bool EiKeyState::fakeCtrlAltDel()
   return false;
 }
 
+void EiKeyState::synchronizeCapsLock(KeyModifierMask mask, const std::string &lang)
+{
+  if (((getActiveModifiers() ^ mask) & KeyModifierCapsLock) == 0)
+    return;
+
+  // Keep the remote lock state between characters. Otherwise KeyMap temporarily
+  // toggles Caps Lock for every uppercase letter and restores it afterwards,
+  // causing input methods such as IBus Hangul to commit each composing jamo.
+  // These modifier-only operations do not register a held server key (button 0).
+  const auto operation = (mask & KeyModifierCapsLock) ? kKeySetModifiers : kKeyClearModifiers;
+  KeyState::fakeKeyDown(operation, KeyModifierCapsLock, 0, lang);
+}
+
+void EiKeyState::fakeKeyDown(KeyID id, KeyModifierMask mask, KeyButton button, const std::string &lang)
+{
+  synchronizeCapsLock(mask, lang);
+  KeyState::fakeKeyDown(id, mask, button, lang);
+}
+
+bool EiKeyState::fakeKeyRepeat(
+    KeyID id, KeyModifierMask mask, int32_t count, KeyButton button, const std::string &lang
+)
+{
+  synchronizeCapsLock(mask, lang);
+  return KeyState::fakeKeyRepeat(id, mask, count, button, lang);
+}
+
 KeyModifierMask EiKeyState::pollActiveModifiers() const
 {
   const auto effectiveMask = xkb_state_serialize_mods(m_xkbState, XKB_STATE_MODS_EFFECTIVE);

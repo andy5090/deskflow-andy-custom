@@ -30,6 +30,8 @@ public:
 
   // IKeyState overrides
   bool fakeCtrlAltDel() override;
+  void fakeKeyDown(KeyID id, KeyModifierMask mask, KeyButton button, const std::string &lang) override;
+  bool fakeKeyRepeat(KeyID id, KeyModifierMask mask, int32_t count, KeyButton button, const std::string &lang) override;
   KeyModifierMask pollActiveModifiers() const override;
   std::int32_t pollActiveGroup() const override;
   void pollPressedKeys(KeyButtonSet &pressedKeys) const override;
@@ -45,6 +47,7 @@ protected:
 private:
   std::uint32_t convertModMask(xkb_mod_mask_t xkbModMaskIn, bool mapMod2ToNumLock = false) const;
   void assignGeneratedModifiers(std::uint32_t keycode, KeyMap::KeyItem &item);
+  void synchronizeCapsLock(KeyModifierMask mask, const std::string &lang);
 
   EiScreen *m_screen = nullptr;
 

@@ -20,6 +20,8 @@ private Q_SLOTS:
   void getKeyMap_alphabeticModifiers_data();
   void getKeyMap_alphabeticModifiers();
   void clearStaleModifiers_shiftDownAndNumLockOn_shiftClearedAndNumLockPreserved();
+  void remoteCapsLock_staysEnabledBetweenLetters();
+  void remoteCapsLock_explicitEventsSynchronizeLock();
 
 private:
   Arch m_arch;
