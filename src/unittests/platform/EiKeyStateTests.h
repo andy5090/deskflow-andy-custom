@@ -17,6 +17,8 @@ class EiKeyStateTests : public QObject
 
 private Q_SLOTS:
   void initTestCase();
+  void getKeyMap_alphabeticModifiers_data();
+  void getKeyMap_alphabeticModifiers();
   void clearStaleModifiers_shiftDownAndNumLockOn_shiftClearedAndNumLockPreserved();
 
 private:

@@ -256,43 +256,25 @@ void EiKeyState::getKeyMap(deskflow::KeyMap &keyMap)
         item.m_button = static_cast<KeyButton>(keycode) - 8; // X keycode offset
         item.m_group = group;
 
-        // xkb_keymap_key_get_mods_for_level() returns ALL modifier combinations
-        // that lead to this level. For example, with CTRL+ALT type, Level1 (F1) can
-        // be accessed via None, Control, or Alt. We want the SIMPLEST (fewest bits)
-        // combination, not the OR of all combinations.
-        //
-        // For modSensitive, we only OR modifiers from this level, not all levels.
-        // This prevents marking F1 as sensitive to Ctrl+Alt just because Level5
-        // (which we skip) uses those modifiers.
+        // Keep each modifier combination returned by XKB. In particular,
+        // lowercase letters use None or Shift+Lock, while uppercase letters
+        // use Shift or Lock. Inventing Shift/Lock variants loses that distinction.
+        // Only include this level's modifiers so skipped VT-switch levels do
+        // not make function keys sensitive to Ctrl+Alt.
         uint32_t modSensitive = 0;
-        uint32_t modRequired = 0xFFFFFFFF;
-        int minBits = 32;
         for (std::size_t m = 0; m < nmasks; m++) {
           modSensitive |= masks[m];
-          int bits = __builtin_popcount(masks[m]);
-          if (bits < minBits) {
-            minBits = bits;
-            modRequired = masks[m];
-          }
-        }
-        if (modRequired == 0xFFFFFFFF) {
-          modRequired = 0; // No masks found, use no modifiers
         }
         item.m_sensitive = convertModMask(modSensitive);
-        item.m_required = convertModMask(modRequired);
-
         assignGeneratedModifiers(keycode, item);
 
-        // add capslock version of key is sensitive to capslock
-        if (item.m_sensitive & KeyModifierShift && item.m_sensitive & KeyModifierCapsLock) {
-          item.m_required &= ~KeyModifierShift;
-          item.m_required |= KeyModifierCapsLock;
+        for (std::size_t m = 0; m < nmasks; m++) {
+          item.m_required = convertModMask(masks[m]);
           keyMap.addKeyEntry(item);
-          item.m_required |= KeyModifierShift;
-          item.m_required &= ~KeyModifierCapsLock;
         }
-
-        keyMap.addKeyEntry(item);
+        if (nmasks == 0) {
+          keyMap.addKeyEntry(item);
+        }
       }
     }
   }
